@@ -1,10 +1,26 @@
 let mqtt = require("mqtt")
-let options = {
-    port: 1884,
+
+const clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8)
+
+const options = {
+    keepalive: 30,
+    clientId: clientId,
+    protocolId: 'MQTT',
+    protocolVersion: 4,
     clean: true,
-};
-// let client = mqtt.connect('ws://127.0.0.1', options);
-let client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+    reconnectPeriod: 1000,
+    connectTimeout: 30 * 1000,
+    will: {
+      topic: 'WillMsg',
+      payload: 'Connection Closed abnormally..!',
+      qos: 0,
+      retain: false
+    },
+    rejectUnauthorized: false
+  }
+
+let client = mqtt.connect('ws://localhost:1884/mqtt', options);
+// let client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
 client.on('connect', function(){
     console.log('Connected');

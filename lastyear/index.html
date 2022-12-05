@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Title Of The Page -->
+  <title>Avishkar 5.0</title>
+
+  <!-- Linking CSS -->
+  <link rel="stylesheet" href="main.css">
+
+  <!-- Linking Chart.js -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js@0.0.1/dist/chart.min.js"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+  <script src="http://localhost:3000/socket.io/socket.io.js" topic="module"></script> 
+
+  <!-- Linking javaScript -->
+  <script defer src="./render.js"></script>
+</head>
+
+<body>
+  <!-- Multiple Tabs -->
+  <div class="tab">
+    <button class="tablinks" onclick="openTab(event, 'Pod_Run')" id="defaultOpen">Pod Run</button>
+    <button class="tablinks" onclick="openTab(event, 'Disk_Setup')">Disk Setup</button>
+    <button class="tablinks" onclick="openTab(event, 'Power_Systems')">Power Systems</button>
+  </div>
+
+  <!-- Pod Run Tab Content -->
+  <div id="Pod_Run" class="tabcontent">
+    <!-- Avishkar Logo -->
+    <img id="img1" src="Main.Logo.Black.BG.png" alt="Avishkar Logo">
+
+    <!-- State Transition Buttons -->
+    <div class="Transition">
+      <button id="Primary" onclick="stateTransition(event, 1)">Precharge ON</button>
+      <button id="Inverter" onclick="stateTransition(event, 2)">Precharge OFF</button>
+      <button id="Cooling" onclick="stateTransition(event, 3)">Contactor ON</button>
+      <button id="Levitate" onclick="stateTransition(event, 4)">Brakes OFF</button>
+      <button id="Accelerate" onclick="stateTransition(event, 5)">PWM ON</button>
+      <button id="Brake" onclick="stateTransition(event, 6)">Brake</button>
+      <button id="Safe" onclick="stateTransition(event, 7)">Random</button>
+      <button id="Crawl" onclick="stateTransition(event, 8)">Random</button>
+    </div>
+
+    <!-- State Parameters Labels -->
+    <div class="State_Parameters_Label">
+      <div class="State_Parameters_Item">
+        <label class="State_Item" style="background-color: #008000;">Present State</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Item">Primary Pack</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Item">Secondary Pack</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Item">Inverter</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Item">Cooling System</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Item">Levitation</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Item">Propulsion</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Item">Brakes</label>
+      </div>
+    </div>
+
+    <!-- State Parameters Readings -->
+    <div class="State_Parameters_Reading">
+      <div class="State_Parameters_Item">
+        <label class="State_Reading" id="Present_State">STA</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Reading" id="Primary_Status">OFF</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Reading" id="Secondary_Status">OFF</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Reading" id="Inverter_Status">OFF</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Reading" id="Cooling_System_Status">OFF</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Reading" id="Levitation_Status">OFF</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Reading" id="Propulsion_Status">OFF</label>
+      </div>
+      <div class="State_Parameters_Item">
+        <label class="State_Reading" id="Brakes_Status">OFF</label>
+      </div>
+    </div>
+
+    <!-- Inverter Status Labels -->
+    <div class="Inverter_Parameters_Label">
+      <div class="Inverter_Parameters_Item">
+        <label class="Inverter_Item">Inverter Status</label>
+      </div>
+      <div class="Inverter_Parameters_Item">
+        <label class="Inverter_Item">Inv Voltage</label>
+      </div>
+      <div class="Inverter_Parameters_Item">
+        <label class="Inverter_Item">Inv Current</label>
+      </div>
+      <div class="Inverter_Parameters_Item">
+        <label class="Inverter_Item">Inv Temperature</label>
+      </div>
+    </div>
+
+    <!-- Inverter Status Readings -->
+    <div class="Inverter_Parameters_Reading">
+      <div class="Inverter_Parameters_Item">
+        <label class="Inverter_Reading" id="Inv_Status">OFF</label>
+      </div>
+      <div class="Inverter_Parameters_Item">
+        <label class="Inverter_Reading" id="Inv_Voltage">0.0</label>
+      </div>
+      <div class="Inverter_Parameters_Item">
+        <label class="Inverter_Reading" id="Inv_Current">0.0</label>
+      </div>
+      <div class="Inverter_Parameters_Item">
+        <label class="Inverter_Reading" id="Inv_Temperature">0.0</label>
+      </div>
+    </div>
+ 
+    <!-- Distance-Time Graph -->
+    <div id="Distance_Time_Graph">
+      <canvas id="Graph_1">
+        <h2 style="color: white;">Canvas Failed</h2>
+      </canvas>
+    </div>
+
+    <!-- Speed-Time Graph -->
+    <div id="Speed_Time_Graph">
+      <canvas id="Graph_2">
+        <h2 style="color: white;">Canvas Failed</h2>
+      </canvas>
+    </div>
+   
+    <!-- Cooling Module Readings -->
+    <div class="Cooling_Module">
+      <table class="Module_Parameters">
+        <thead>
+          <tr><th colspan="2">Braking Back</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><label class="Parameter_Name" id="Pressure_Cooling_1">Pressure 1</label></td>
+            <td><label class="Parameter_Value" id="Pressure_Cooling_1_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Pressure_Cooling_2">Pressure 2</label></td>
+            <td><label class="Parameter_Value" id="Pressure_Cooling_2_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Temperature_Cooling_1">Temperature 1</label></td>
+            <td><label class="Parameter_Value" id="Temperature_Cooling_1_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Temperature_Cooling_2">Temperature 2</label></td>
+            <td><label class="Parameter_Value" id="Temperature_Cooling_2_Reading">0.0</label></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Stability Module Readings -->
+    <div class="Stability_Module">
+      <table class="Module_Parameters">
+        <thead>
+          <tr><th colspan="2">Stability Module</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><label class="Parameter_Name" id="Damper_Distance1">Distance 1</label></td>
+            <td><label class="Parameter_Value" id="Damper_Distance1_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Damper_Distance2">Distance 2</label></td>
+            <td><label class="Parameter_Value" id="Damper_Distance2_Reading">0.0</label></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Battery Module Readings -->
+    <div class="Battery_Module">
+      <table class="Module_Parameters">
+        <thead>
+          <tr><th colspan="2">Battery Module</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><label class="Parameter_Name" id="Voltage">Voltage</label></td>
+            <td><label class="Parameter_Value" id="Voltage_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Current">Current</label></td>
+            <td><label class="Parameter_Value" id="Current_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Avg_Cell_Voltage">Avg Cell Voltage</label></td>
+            <td><label class="Parameter_Value" id="Avg_Cell_Voltage_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Max_Cell_Voltage">Max Cell Voltage</label></td>
+            <td><label class="Parameter_Value" id="Max_Cell_Voltage_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Min_Cell_Voltage">Min Cell Voltage</label></td>
+            <td><label class="Parameter_Value" id="Min_Cell_Voltage_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Avg_Cell_Temp">Avg Cell Temp</label></td>
+            <td><label class="Parameter_Value" id="Avg_Cell_Temp_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Max_Cell_Temp">Max Cell Temp</label></td>
+            <td><label class="Parameter_Value" id="Max_Cell_Temp_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Min_Cell_Temp">Min Cell Temp</label></td>
+            <td><label class="Parameter_Value" id="Min_Cell_Temp_Reading">0.0</label></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Propulsion Module Readings -->
+    <div class="Propulsion_Module">
+      <table class="Module_Parameters">
+        <thead>
+          <tr><th colspan="2">Propulsion Module</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><label class="Parameter_Name" id="LIM_Status">Status</label></td>
+            <td><label class="Parameter_Value" id="LIM_Status_Reading">OFF</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="LIM_Voltage">Voltage</label></td>
+            <td><label class="Parameter_Value" id="LIM_Voltage_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="LIM_Current">Current</label></td>
+            <td><label class="Parameter_Value" id="LIM_Current_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="LIM_Temperature">Temperature</label></td>
+            <td><label class="Parameter_Value" id="LIM_Temperature_Reading">0.0</label></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+     <!-- Battery Module Readings -->
+     <div class="Braking_Module">
+      <table class="Module_Parameters">
+        <thead>
+          <tr><th colspan="2">Braking Front</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><label class="Parameter_Name" id="Pressure_Braking_1">Pressure 1</label></td>
+            <td><label class="Parameter_Value" id="Pressure_Braking_1_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Pressure_Braking_2">Pressure 2</label></td>
+            <td><label class="Parameter_Value" id="Pressure_Braking_2_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Reed_1">Reed 1</label></td>
+            <td><label class="Parameter_Value" id="Reed_1_Reading">LOW</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Reed_2">Reed 2</label></td>
+            <td><label class="Parameter_Value" id="Reed_2_Reading">LOW</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Reed_3">Reed 3</label></td>
+            <td><label class="Parameter_Value" id="Reed_3_Reading">LOW</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Reed_4">Reed 4</label></td>
+            <td><label class="Parameter_Value" id="Reed_4_Reading">LOW</label></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Levitation Module Readings -->
+    <div class="Levitation_Module">
+      <table class="Module_Parameters">
+        <thead>
+          <tr><th colspan="2">Levitation Module</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><label class="Parameter_Name" id="EMS_Status">Status</label></td>
+            <td><label class="Parameter_Value" id="EMS_Status_Reading">OFF</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="EMS_Voltage">Voltage</label></td>
+            <td><label class="Parameter_Value" id="EMS_Voltage_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="EMS_Current">Current</label></td>
+            <td><label class="Parameter_Value" id="EMS_Current_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="EMS_Temperature">Temperature</label></td>
+            <td><label class="Parameter_Value" id="EMS_Temperature_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Gap1">Gap 1</label></td>
+            <td><label class="Parameter_Value" id="Gap1_Reading">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Gap2">Gap 2</label></td>
+            <td><label class="Parameter_Value" id="Gap2_Reading">0.0</label></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Primary Parameters -->
+    <div class="Kinematics_Data">
+      <div class="Kinematic_Parameter">
+        <label class="Kinematics_Parameter_Name" id="Kinematics_Distance">Distance</label>
+        <label class="Kinematics_Parameter_Value" id="Kinematics_Distance_Value">0.0</label>
+      </div>
+      <div class="Kinematic_Parameter">
+        <label class="Kinematics_Parameter_Name" id="Kinematics_Speed">Speed</label>
+        <label class="Kinematics_Parameter_Value" id="Kinematics_Speed_Value">0.0</label>
+      </div>
+      <div class="Kinematic_Parameter">
+        <label class="Kinematics_Parameter_Name" id="Kinematics_Acceleration">Acceleration</label>
+        <label class="Kinematics_Parameter_Value" id="Kinematics_Acceleration_Value">0.0</label>
+      </div>
+    </div>
+
+    <div class="Message_Bar">
+      <!-- Error Dialog -->
+      <div class="Error_Dialog_Box">
+        <label id="Error_Box_Name">Error</label>
+        <label id="Error_Box_Value_1">No Errors</label>
+      </div>
+      <!-- Message Dialog -->
+      <div class="Message_Dialog_Box">
+        <label id="Message_Box_Name">Message</label>
+        <label id="Message_Box_Value_1">No Messages</label>
+      </div>
+    </div>
+
+    <!-- Avishkar Logo -->
+    <img id="img2" src="Main.Logo.Black.BG.png" alt="Avishkar Logo">
+
+    <!-- Time -->
+    <label class="currentTime" id="time1">0.0</label>
+  </div>
+
+  <!-- Disk Setup Tab Content -->
+  <div id="Disk_Setup" class="tabcontent">
+    <!-- Avishkar Logo -->
+    <img id="img1" src="Main.Logo.Black.BG.png" alt="Avishkar Logo">
+
+    <!-- State Transition Buttons -->
+    <div class="Transition">
+      <button id="Primary" onclick="stateTransition(event, 2)">Primary Pack</button>
+      <button id="Inverter" onclick="stateTransition(event, 3)">Inverter</button>
+      <button id="Cooling" onclick="stateTransition(event, 4)">Cooling System</button>
+      <button id="Levitate" onclick="stateTransition(event, 5)">Levitation</button>
+      <button id="Accelerate" onclick="stateTransition(event, 6)">Propulsion</button>
+      <button id="Brake" onclick="stateTransition(event, 8)">Brakes</button>
+      <button id="Safe" onclick="stateTransition(event, 1)">Safe To Approach</button>
+      <button id="Crawl" onclick="stateTransition(event, 9)">Crawl</button>
+    </div>
+    <!-- Column 1 -->
+    <div class="ButtonsCollectionDS">
+      <div class="ButtonsColumn1">
+        <div class="ButtonDS">
+          <h4 class="ButtonName">Levitation</h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 1)">EMS ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 2)">EMS OFF</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName">LIM</h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 3)">LIM ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 4)">LIM OFF</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName">Braking</h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 5)">ACCELERATING</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 6)">BRAKING</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName"></h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 7)">RETRACTION</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 8)">INITIAL</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName"></h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 9)">3/2 ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 10)">3/2 OFF</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName"></h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 11)">5/2 ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 12)">5/2 OFF</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName"></h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 13)">5/3 ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 14)">5/3 OFF</button>
+        </div>
+      </div>
+      <!-- Column 2 -->
+      <div class="ButtonsColumn2">
+        <div class="ButtonDS">
+          <h4 class="ButtonName">Stability</h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 15)">DAMPER ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 16)">DAMPER OFF</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName">Power Systems</h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 17)">CONTACTOR ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 18)">CONTACTOR OFF</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName">Inverter</h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 19)">INVERTER ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 20)">INVERTER OFF</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName"></h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 21)">PROPEL ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 22)">PROPEL OFF</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName"></h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 23)">CRAWL ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 24)">CRAWL OFF</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName"></h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 25)">PCR ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 26)">PCR OFF</button>
+        </div>
+        <div class="ButtonDS">
+          <h4 class="ButtonName">Controls</h4>
+          <button id="" class="Buttons" onclick="DSTesting(event, 27)">UBIQUITY ON</button>
+          <button id="" class="Buttons" onclick="DSTesting(event, 28)">UBIQUITY OFF</button>
+        </div>
+      </div>
+    </div> 
+
+    <div class="Message_Bar">
+      <!-- Error Dialog -->
+      <div class="Error_Dialog_Box">
+        <label id="Error_Box_Name">Error</label>
+        <label id="Error_Box_Value_2">No Errors</label>
+      </div>
+      <!-- Message Dialog -->
+      <div class="Message_Dialog_Box">
+        <label id="Message_Box_Name">Message</label>
+        <label id="Message_Box_Value_2">No Messages</label>
+      </div>
+    </div>
+
+    <!-- Avishkar Logo -->
+    <img id="img2" src="Main.Logo.Black.BG.png" alt="Avishkar Logo">
+
+    <!-- Time -->
+    <label class="currentTime" id="time2">0.0</label>
+  </div>
+
+  <!-- Power Systems Tab Content -->
+  <div id="Power_Systems" class="tabcontent">
+    <!-- Avishkar Logo -->
+    <img id="img1" src="Main.Logo.Black.BG.png" alt="Avishkar Logo">
+
+    <!-- Power Systems Label -->
+    <label id="Power_Systems_Label">Battery Monitoring System</label>
+
+    <!-- Cell Voltages -->
+    <div class="Power_Voltage_Module">
+      <table class="Cell_Voltages">
+        <thead>
+          <tr>
+            <th colspan="2">Cell Voltage</th>
+            <th colspan="2">Cell Voltage</th>
+            <th colspan="2">Cell Voltage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell1</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell1">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell21</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell21">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell41</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell41">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell2</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell2">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell22</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell22">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell42</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell42">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell3</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell3">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell23</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell23">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell43</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell43">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell4</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell4">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell24</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell24">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell44</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell44">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell5</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell5">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell25</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell25">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell45</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell45">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell6</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell6">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell26</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell26">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell46</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell46">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell7</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell7">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell27</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell27">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell47</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell47">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell8</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell8">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell28</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell28">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell48</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell48">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell9</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell9">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell29</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell29">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell49</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell49">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell10</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell10">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell30</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell30">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell50</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell50">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell11</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell11">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell31</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell31">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell51</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell51">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell12</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell12">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell32</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell32">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell52</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell52">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell13</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell13">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell33</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell33">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell53</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell53">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell14</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell14">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell34</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell34">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell54</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell54">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell15</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell15">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell35</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell35">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell55</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell55">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell16</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell16">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell36</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell36">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell56</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell56">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell17</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell17">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell37</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell37">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell57</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell57">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell18</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell18">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell38</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell38">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell58</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell58">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell19</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell19">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell39</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell39">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell59</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell59">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Cell_Voltage_Name">Cell20</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell20">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell40</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell40">0.0</label></td>
+            <td><label class="Cell_Voltage_Name">Cell60</label></td>
+            <td><label class="Cell_Voltage_Value" id="Cell60">0.0</label></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cell Temperatures -->
+    <div class="Power_Temperature_Module">
+      <table class="Module_Parameters">
+        <thead>
+          <tr><th colspan="2">Temperature Module</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><label class="Parameter_Name" id="Temperature_1">Temp 1</label></td>
+            <td><label class="Parameter_Value" id="Temperature_Reading_1">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Temperature_2">Temp 2</label></td>
+            <td><label class="Parameter_Value" id="Temperature_Reading_2">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Temperature_3">Temp 3</label></td>
+            <td><label class="Parameter_Value" id="Temperature_Reading_3">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Temperature_4">Temp 4</label></td>
+            <td><label class="Parameter_Value" id="Temperature_Reading_4">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Temperature_5">Temp 5</label></td>
+            <td><label class="Parameter_Value" id="Temperature_Reading_5">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Temperature_6">Temp 6</label></td>
+            <td><label class="Parameter_Value" id="Temperature_Reading_6">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Temperature_7">Temp 7</label></td>
+            <td><label class="Parameter_Value" id="Temperature_Reading_7">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Temperature_8">Temp 8</label></td>
+            <td><label class="Parameter_Value" id="Temperature_Reading_8">0.0</label></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Battery Module Readings -->
+    <div class="Power_Module">
+      <table class="Module_Parameters">
+        <thead>
+          <tr><th colspan="2">Battery Module</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><label class="Parameter_Name" id="Voltage">Voltage</label></td>
+            <td><label class="Parameter_Value" id="Voltage_Reading_PS">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Current">Current</label></td>
+            <td><label class="Parameter_Value" id="Current_Reading_PS">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Avg_Cell_Voltage">Avg Cell Voltage</label></td>
+            <td><label class="Parameter_Value" id="Avg_Cell_Voltage_Reading_PS">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Max_Cell_Voltage">Max Cell Voltage</label></td>
+            <td><label class="Parameter_Value" id="Max_Cell_Voltage_Reading_PS">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Min_Cell_Voltage">Min Cell Voltage</label></td>
+            <td><label class="Parameter_Value" id="Min_Cell_Voltage_Reading_PS">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Avg_Cell_Temperature">Avg Cell Temp</label></td>
+            <td><label class="Parameter_Value" id="Avg_Cell_Temp_Reading_PS">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Max_Cell_Temp">Max Cell Temp</label></td>
+            <td><label class="Parameter_Value" id="Max_Cell_Temp_Reading_PS">0.0</label></td>
+          </tr>
+          <tr>
+            <td><label class="Parameter_Name" id="Min_Cell_Temp">Min Cell Temp</label></td>
+            <td><label class="Parameter_Value" id="Min_Cell_Temp_Reading_PS">0.0</label></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="Message_Bar">
+      <!-- Error Dialog -->
+      <div class="Error_Dialog_Box">
+        <label id="Error_Box_Name">Error</label>
+        <label id="Error_Box_Value_3">No Errors</label>
+      </div>
+      <!-- Message Dialog -->
+      <div class="Message_Dialog_Box">
+        <label id="Message_Box_Name">Message</label>
+        <label id="Message_Box_Value_3">No Messages</label>
+      </div>
+    </div>
+
+    <!-- Avishkar Logo -->
+    <img id="img2" src="Main.Logo.Black.BG.png" alt="Avishkar Logo">
+
+    <!-- Time -->
+    <label class="currentTime" id="time3">0.0</label>
+  </div>
+
+  <!-- javaScript To Set Current Time -->
+  <script>
+    var today = new Date(),
+    minutes = today.getMinutes().toString().length == 1 ? '0'+today.getMinutes() : today.getMinutes(),
+    hours = today.getHours().toString().length == 1 ? '0'+today.getHours() : today.getHours(),
+    ampm = today.getHours() >= 12 ? 'pm' : 'am',
+    months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var time = days[today.getDay()]+' '+months[today.getMonth()]+' '+today.getDate()+' '+today.getFullYear()+' '+hours+':'+minutes+ampm;
+    document.getElementById("time1").innerHTML = time;
+    document.getElementById("time2").innerHTML = time;
+    document.getElementById("time3").innerHTML = time;
+  </script>
+</body>
+
+</html>
